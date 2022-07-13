@@ -5,8 +5,10 @@ from django.contrib.auth.views import (
     LoginView, LogoutView, logout_then_login, 
     PasswordChangeView as AuthPasswordChangeView,
 )
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
+
+from accounts.models import User
 from .forms import PasswordChangeForm, SignupForm, ProfileForm
 from django.contrib.auth.decorators import login_required
 
@@ -60,3 +62,28 @@ class PasswordChangeView(LoginRequiredMixin, AuthPasswordChangeView):
         return super().form_valid(form)
 
 password_change = PasswordChangeView.as_view()
+
+
+@login_required
+def user_follow(request, username):
+    follow_user = get_object_or_404(User, username=username, is_active=True)
+    
+    # request.user => follow_user을 팔로우하고자 함
+    request.user.following_set.add(follow_user)
+    follow_user.follower_set.add(request.user)
+
+    messages.success(request, f"{follow_user}님을 팔로우했습니다.")
+    redirect_url = request.META.get("HTTP_REFERER", "root") # META에 REFERER가 있으면 가져오고 아니면 'root'를 반환
+    return redirect(redirect_url)
+
+
+@login_required
+def user_unfollow(request, username):
+    unfollow_user = get_object_or_404(User, username=username, is_active=True)
+
+    request.user.following_set.remove(unfollow_user)
+    unfollow_user.follower_set.remove(request.user)
+
+    messages.success(request, f"{unfollow_user}님을 언팔했습니다.")
+    redirect_url = request.META.get("HTTP_REFERER", "root") # META에 REFERER가 있으면 가져오고 아니면 'root'를 반환
+    return redirect(redirect_url) # root는 url의 패턴네임이지만 redirect자체가 패턴네임으로 먼저 시도해보고 이후 url로 처리하므로 OK

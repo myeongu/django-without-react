@@ -11,6 +11,8 @@ class User(AbstractUser):
         MALE = "M", "남성" # (db 저장되는 값, 실제 보여지는 값)
         FEMALE = "F", "여성"
         
+    follower_set = models.ManyToManyField("self", blank=True) # self -> 유저간의 상호작용
+    following_set = models.ManyToManyField("self", blank=True)
 
     website_url = models.URLField(blank=True)
     bio = models.TextField(blank=True)

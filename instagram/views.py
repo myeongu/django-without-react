@@ -9,8 +9,12 @@ from .models import Post
 
 @login_required
 def index(request):
+    suggested_user_list = get_user_model().objects.all()\
+        .exclude(pk=request.user.pk)\
+        .exclude(pk__in=request.user.following_set.all())[:3] # 현재 유저의 전체 following set
+
     return render(request, "instagram/index.html", {
-        
+        "suggested_user_list":suggested_user_list,
     })
 
 @login_required
