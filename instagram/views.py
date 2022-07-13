@@ -1,21 +1,26 @@
+from datetime import timedelta
 from urllib import request
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-
+from django.utils import timezone
 from .forms import PostForm
 from .models import Post
 
 
 @login_required
 def index(request):
+    timesince = timezone.now() - timedelta(days=3) # 현재 시간 - 시간 간격
     # 전체 post에서 filtering
     post_list = Post.objects.all()\
         .filter( # Q를 통해서 'OR' 구현
             Q(author=request.user) | 
             Q(author__in=request.user.following_set.all())
+        )\
+        .filter(
+            created_at__gte=timesince # greater than equal 
         )
 
     suggested_user_list = get_user_model().objects.all()\
