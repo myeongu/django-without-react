@@ -1,5 +1,4 @@
 from datetime import timedelta
-from urllib import request
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -55,6 +54,23 @@ def post_detail(request, pk):
     return render(request, "instagram/post_detail.html", {
         "post":post,
     })
+
+@login_required
+def post_like(request, pk):
+    post = get_object_or_404(Post , pk=pk)
+    post.like_user_set.add(request.user)
+    messages.success(request, f"포스팅#{post.pk}를 좋아합니다.")
+    redirect_url = request.META.get("HTTP_REFERER", "root")
+    return redirect(redirect_url)
+
+@login_required
+def post_unlike(request, pk):
+    post = get_object_or_404(Post , pk=pk)
+    post.like_user_set.remove(request.user)
+    messages.success(request, f"포스팅#{post.pk}를 좋아요를 취소합니다.")
+    redirect_url = request.META.get("HTTP_REFERER", "root")
+    return redirect(redirect_url)
+
     
 def user_page(request, username):
     page_user = get_object_or_404(get_user_model(), username=username, is_active=True)

@@ -12,13 +12,19 @@ class BaseModel(models.Model): # 공통된 필드가 존재할 경우 추상화
         abstract = True
 
 
+# user에 대해 해당 유저가 작성한 post에 접근할 때, 
+# -> Post.objects.filter(author=user)
+# -> user.post_set.all() -> like_user_set과 ORM단에서 충돌 가능성 존재 => related_name 변경 필요
 class Post(BaseModel):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="my_post_set", # default는 post_set -> user.my_post_name으로 post접근 가능
+                              on_delete=models.CASCADE)
     photo = models.ImageField(upload_to="instagram/post/%Y/%m/%d")
     caption = models.TextField()
     tag_set = models.ManyToManyField('Tag', blank=True)
     location = models.CharField(max_length=100)
-    
+    like_user_set = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True,
+                                            related_name="like_post_set",)
+
 
     def __str__(self) -> str:
         return self.caption
@@ -33,6 +39,13 @@ class Post(BaseModel):
 
     def get_absolute_url(self):
         return reverse("instagram:post_detail", args=[self.pk])
+
+    def is_like_user(self, user):
+        return self.like_user_set.filter(pk=user.pk).exists()
+
+    class Meta:
+        ordering = ['-id']
+
 
 
 class Tag(models.Model):
