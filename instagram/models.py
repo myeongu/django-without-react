@@ -46,6 +46,13 @@ class Post(BaseModel):
     class Meta:
         ordering = ['-id']
 
+class Comment(BaseModel):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) # CASCADE -> 1:N 관계에서 1이 삭제되면 N도 삭제
+    post = models.ForeignKey(Post, on_delete=models.CASCADE) # CASCADE(삭제) 대신 SET_NULL, SET_DEFAULT 등도 존재
+    message = models.TextField()
+
+    class Meta:
+        ordering = ['-id']
 
 
 class Tag(models.Model):
